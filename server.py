@@ -19,6 +19,9 @@ class Server(threading.Thread):
 
         print 'server: server thread created'
 
+    def _handle_request(self, data):
+        pass
+
     def run(self):
         print 'server: server thread started'
 
@@ -50,6 +53,7 @@ class Server(threading.Thread):
                         if data:
                             print 'server: received data from ', client_address
                             print 'server: data = ', data
+                            self._handle_request(data)
                         else:
                             print 'server: no more data from ', client_address
                             sock.close()

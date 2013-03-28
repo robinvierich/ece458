@@ -1,4 +1,5 @@
 import inspect
+import time
 
 from server import Server
 from client import Client
@@ -11,7 +12,6 @@ server.start()
 client = Client()
 
 print 'starting test'
-print 'enter "help" for list of commands'
 
 def get_command_list():
     # get all methods on the client class
@@ -26,7 +26,7 @@ def get_command_list():
 def handle_command(command):
     print 'got command ', command
     if command == 'help':
-        return "\n".join(get_command_list())
+        return '\n' + '\n'.join(get_command_list()) + '\n'
 
     if command == 'quit':
         server.stop()
@@ -40,14 +40,16 @@ def handle_command(command):
     else:
         args = []
 
-    method = getattr(client, command_name)
-    if not method:
+    if not hasattr(client, command_name):
         return None
 
+    method = getattr(client, command_name)
     return method(*args)
 
 
 while True:
-    print handle_command(raw_input('Enter command: '))
+    time.sleep(0.1)
+    print 'Enter "help" for list of commands'
+    print 'Enter command: ', handle_command(raw_input())
 
 

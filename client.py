@@ -2,6 +2,7 @@ import socket
 
 import constants
 
+
 class Client():
     def __init__(self):
         self._sock = socket.socket()
@@ -11,37 +12,36 @@ class Client():
 
     def login(self, username, pass_hash):
         self._sock.sendall('login, %s, %s' % (username, pass_hash))
-        pass
 
 
     def logout(self, sID):
-        pass
+        self._sock.sendall('logout, %s' % sID)
 
 
     def move(self, sID, relative_pos):
-        pass
+        self._sock.sendall('move, %s, %s' % (sID, relative_pos))
 
 
     def equip(self, sID, item):
-        pass
+        self._sock.sendall('equip, %s, %s' % (sID, item))
 
 
     def attack(self, sID, target):
-        pass
+        self._sock.sendall('attack, %s, %s' % (sID, target))
 
 
     def gather(self, sID, resource):
-        pass
+        self._sock.sendall('gather, %s, %s' % (sID, resource))
 
 
     def buy(self, sID, item):
-        pass
+        self._sock.sendall('buy, %s, %s' % (sID, item))
 
 
     def sell(self, sID, item):
-        pass
+        self._sock.sendall('sell, %s, %s' % (sID, item))
 
 
-    def get_visible_player_positions(self, sID, item):
-        pass
+    def get_visible_player_positions(self, sID):
+        self._sock.sendall('get_visible_player_positions, %s, %s' % (sID, item))
 
