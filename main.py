@@ -15,18 +15,26 @@ print 'starting test'
 
 def get_command_list():
     # get all methods on the client class
-    client_commands = [
-            "%s(%s)" % (attr, str(inspect.getargspec(getattr(client, attr))[0]))
-            for attr in dir(client) 
-            if callable(getattr(client, attr)) and not attr.startswith('__') 
-    ]
+
+    client_commands = []
+    for attr_name in dir(client):
+        attr = getattr(client, attr_name)
+
+        if callable(attr) and not attr_name.startswith('__'):
+
+            args = [arg for arg in inspect.getargspec(attr)[0] if not arg == 'self']
+            client_commands.append("%s(%s)" % (attr_name, args))
 
     return ['help', 'quit'] + client_commands
 
 def handle_command(command):
     print 'got command ', command
     if command == 'help':
-        return '\n' + '\n'.join(get_command_list()) + '\n'
+        command_list = get_command_list()
+
+        command_list_str = '\n'.join(command_list).replace('\'', '').replace('[','').replace(']','')
+
+        return '\n' + command_list_str + '\n'
 
     if command == 'quit':
         server.stop()
