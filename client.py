@@ -19,7 +19,10 @@ class Client():
 
 
     def move(self, sID, relative_pos):
-        self._sock.sendall('move, %s, %s' % (sID, relative_pos))
+        print '**rp ', relative_pos
+        pos_str = relative_pos.replace(',',';')
+        print '**posstr', pos_str
+        self._sock.sendall('move, %s, %s' % (sID, pos_str))
 
 
     def equip(self, sID, item):
@@ -43,5 +46,5 @@ class Client():
 
 
     def get_visible_player_positions(self, sID):
-        self._sock.sendall('get_visible_player_positions, %s, %s' % (sID, item))
+        self._sock.sendall('get_visible_player_positions, %s' % sID)
 

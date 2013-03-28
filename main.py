@@ -23,7 +23,7 @@ def get_command_list():
         if callable(attr) and not attr_name.startswith('__'):
 
             args = [arg for arg in inspect.getargspec(attr)[0] if not arg == 'self']
-            client_commands.append("%s(%s)" % (attr_name, args))
+            client_commands.append("%s %s" % (attr_name, ' '.join(args)))
 
     return ['help', 'quit'] + client_commands
 
@@ -41,7 +41,9 @@ def handle_command(command):
         quit()
 
     split_command = command.split(' ')
-    command_name = split_command[0]
+    command_name = split_command[0].strip()
+
+    print split_command
 
     if len(split_command) > 1:
         args = split_command[1:]

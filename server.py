@@ -26,11 +26,26 @@ class Server(threading.Thread):
         print 'server: server thread created'
 
     def _handle_request(self, data):
+        print 'server: in _handle_request'
         split_data = data.split(",");
-        if (len(split_data) > 1):
-            eval("self.handle_%s(*split_data[1:])" % split_data[0].strip())
+        method_name = "handle_%s" % split_data[0].strip()
+
+        if not hasattr(self, method_name):
+            print "server: ERROR! got bad method_name: ", method_name
+            return
+
+        method = getattr(self, method_name)
+
+        if len(split_data) > 2:
+            args = split_data[1:]
+            method(*args)
+
+        elif len(split_data) > 1:
+            args = split_data[1].strip()
+            method(args)
+
         else:
-            eval("self.handle_%s()" % split_data[0].strip())
+            method()
 
 
     def handle_login(self, username, pass_hash):
@@ -38,41 +53,42 @@ class Server(threading.Thread):
         pass
 
     def handle_logout(self, sid):
-        print 'server: in handle logout'% (sid)
+        print 'server: in handle logout. %s'% sid
 
 
-    def handle_move(self, sid, relative_pos):
-        print 'server: in handle move'% (sid, relative_pos)
+    def handle_move(self, sid, relative_pos_str):
+        relative_pos = eval(relative_pos_str.replace(';',','))
+        print 'server: in handle move. %s, %s'% (sid, str(relative_pos))
         pass
 
 
     def handle_equip(self, sid, item):
-        print 'server: in handle equip'% (sid, item)
+        print 'server: in handle equip. %s, %s'% (sid, item)
         pass
 
 
     def handle_attack(self, sid, item):
-        print 'server: in handle attack'% (sid, item)
+        print 'server: in handle attack. %s, %s'% (sid, item)
         pass
 
 
     def handle_gather(self, sid, resource):
-        print 'server: in handle gather'%  (sid, resource)
+        print 'server: in handle gather. %s, %s'%  (sid, resource)
         pass
 
 
     def handle_buy(self, sid, item):
-        print 'server: in handle buy' % (sid, item)
+        print 'server: in handle buy. %s, %s' % (sid, item)
         pass
 
 
     def handle_sell(self, sid, item):
-        print 'server: in handle sell' % (sid, item)
+        print 'server: in handle sell. %s, %s' % (sid, item)
         pass
 
 
     def handle_get_visible_player_positions(self, sid):
-        print 'server: in handle get_visible_player_positions'% (sid)
+        print 'server: in handle get_visible_player_positions. %s'% (sid)
         pass
 
 
@@ -103,23 +119,23 @@ class Server(threading.Thread):
 
                 #if there's data coming in (another socket's state changed)
                 else:
-                    try:
-                        data = sock.recv(constants.BUFFER_SIZE)
-                        real_sid = sock.getpeername()
+            #        try:
+                    data = sock.recv(constants.BUFFER_SIZE)
+                    real_sid = sock.getpeername()
 
-                        if data:
-                            print 'server: received data from ', client_address
-                            print 'server: data = ', data
-                            self._handle_request(sid, data)
-                        else:
-                            print 'server: no more data from ', client_address
-                            sock.close()
-                            sock_list.remove(sock)
-                            break
-
-                    except e as Exception:
-                        print 'server: Connection ERROR! ', e
+                    if data:
+                        print 'server: received data from ', client_address
+                        print 'server: data = ', data
+                        self._handle_request(data)
+                    else:
+                        print 'server: no more data from ', client_address
                         sock.close()
+                        sock_list.remove(sock)
+                        break
+
+                    #except Exception as e:
+                        #print 'server: Connection ERROR! ', e
+                        #sock.close()
 
     def stop(self):
         print 'server: stopping server thread'
