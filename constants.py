@@ -1,0 +1,4 @@
+HOST = 'localhost'
+PORT = 12337
+BUFFER_SIZE = 4096
+
