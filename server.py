@@ -3,6 +3,7 @@ import ssl
 import threading
 import select
 import random
+import os
 
 import constants
 from player import Player
@@ -97,6 +98,7 @@ class Server(threading.Thread):
         if pass_hash == stored_pass_hash:
             sid_to_player_map[sid] = Player(sid)
 
+        self.updateMap()
         return sid
 
 
@@ -140,6 +142,8 @@ class Server(threading.Thread):
 
             # not weapon/potion, must be other player
             pass
+
+        self.updateMap(self)
 
 
     def handle_equip(self, sid, weapon):
@@ -236,5 +240,14 @@ class Server(threading.Thread):
         print 'server: joining server thread'
         self.join()
         print 'server: server thread joined'
+
+    def updateMap(self):
+        os.system('clear')
+        for x in range(len(game_map)):
+            for y in range(len(game_map[0])):
+                print '[',str(game_map[x,y]),']'
+            print '\r\n'
+        
+        
 
 
