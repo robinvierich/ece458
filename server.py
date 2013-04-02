@@ -209,11 +209,11 @@ class Server(threading.Thread):
                 # if there's a new connection coming in (self._sock state changed)
                 if sock is self._sock:
                     connected_socket, client_address = self._sock.accept() # blocks waiting for connection
-                    connected_socket = ssl.wrap_socket(connected_socket,
-                                                       server_side=True,
-                                                       certfile='cert.pem',
-                                                       keyfile='cert.pem',
-                                                       ssl_version=ssl.PROTOCOL_TLSv1)
+                   # connected_socket = ssl.wrap_socket(connected_socket,
+                    #                                   server_side=True,
+                     #                                  certfile='cert.pem',
+                      #                                 keyfile='cert.pem',
+                       #                                ssl_version=ssl.PROTOCOL_TLSv1)
 
                     print 'server: got connection from ', client_address
 
@@ -249,10 +249,8 @@ class Server(threading.Thread):
 
     def updateMap(self):
         os.system('clear')
-        for x in range(len(game_map)):
-            for y in range(len(game_map[0])):
-                print '[',str(game_map[x,y]),']'
-            print '\r\n'
+        print '\n'.join([str(row) for row in game_map])
+            
         
         
 
