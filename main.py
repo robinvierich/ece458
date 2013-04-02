@@ -62,6 +62,9 @@ def handle_command(command):
 while True:
     time.sleep(0.1)
     print 'Enter "help" for list of commands'
-    print 'Enter command: ', handle_command(raw_input())
+    print 'Enter command: '
 
+    ret_val = handle_command(raw_input())
+
+    print ret_val
 

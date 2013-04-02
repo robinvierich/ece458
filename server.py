@@ -42,7 +42,7 @@ xmax = len(game_map) - 1
 ymax = len(game_map[0]) - 1
 
 class Server(threading.Thread):
-    def __init__(self, host=constants.HOST, port=constants.PORT):
+    def __init__(self, host=constants.SERVER_HOST, port=constants.SERVER_PORT):
         threading.Thread.__init__(self)
         self._running = False
  
@@ -69,30 +69,35 @@ class Server(threading.Thread):
 
         method = getattr(self, method_name)
 
+        ret_val = None
+
         # ** login is a special case
         if method_name == 'handle_login':
 
-            username, pass_hash = split_data[1:]
+            username, pass_hash = [s.strip() for s in split_data[1:]]
 
             sid = self.handle_login(socket, username, pass_hash)
             socket.sendall(str(sid))
 
         elif len(split_data) > 2:
             args = split_data[1:]
-            method(*args)
+            ret_val = method(*args)
 
         elif len(split_data) > 1:
             args = split_data[1].strip()
-            method(args)
+            ret_val = method(args)
         else:
-            method()
+            ret_val = method()
 
+
+        if ret_val:
+            socket.sendall(str(ret_val))
 
     def handle_login(self, socket, username, pass_hash):
         print 'server: in handle login. %s, %s, %s' % (socket, username, pass_hash)
         stored_pass_hash = users.get(username)
 
-        sid = random.random()
+        sid = str(round(random.random(), 10))
 
         if pass_hash == stored_pass_hash:
             sid_to_player_map[sid] = Player(sid)
@@ -170,7 +175,8 @@ class Server(threading.Thread):
 
 
     def handle_get_visible_map(self, sid):
-        print 'server: in handle get_visible_player_positions. %s'% (sid)
+        print 'server: in handle_get_visible_map. %s'% (sid)
+
         player = sid_to_player_map.get(sid)
         if player == None:
             return
