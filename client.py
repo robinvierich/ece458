@@ -8,7 +8,7 @@ class Client():
     def __init__(self):
         self._sock = socket.socket()
         self._sock = ssl.wrap_socket(self._sock, cert_reqs=ssl.CERT_NONE)
-        self._sock.connect((constants.HOST, constants.PORT))
+        self._sock.connect((constants.CLIENT_HOST, constants.CLIENT_PORT))
         self._sid = None
         print 'client connected to server'
 
@@ -57,8 +57,15 @@ class Client():
         self._sock.sendall('use_potion; %s; %s' % (self._sid, potion_name))
 
 
-    def get_visible_map_positions(self):
+    def get_visible_map(self):
         self.__check_sid()
 
-        self._sock.sendall('get_visible_map_positions; %s' % self._sid)
+        self._sock.sendall('get_visible_map; %s' % self._sid)
 
+        data = self._sock.recv(4096)
+        if data == '':
+            raise Exception('socket broken')
+
+        visible_map = '\n'.join([str(row) for row in eval(data)])
+
+        return visible_map
