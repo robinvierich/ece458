@@ -1,6 +1,7 @@
 import socket
 import threading
 import select
+import random
 
 import constants
 from player import Player
@@ -90,7 +91,7 @@ class Server(threading.Thread):
         print 'server: in handle login. %s, %s, %s' % (socket, username, pass_hash)
         stored_pass_hash = users.get(username)
 
-        sid = socket.getpeername()
+        sid = random.random()
 
         if pass_hash == stored_pass_hash:
             sid_to_player_map[sid] = Player(sid)
