@@ -1,4 +1,5 @@
 import socket
+import ssl
 
 import constants
 
@@ -6,6 +7,7 @@ import constants
 class Client():
     def __init__(self):
         self._sock = socket.socket()
+        self._sock = ssl.wrap_socket(self._sock, cert_reqs=ssl.CERT_NONE)
         self._sock.connect((constants.HOST, constants.PORT))
         self._sid = None
         print 'client connected to server'
@@ -16,7 +18,7 @@ class Client():
 
         data = self._sock.recv(4096)
         if data == '':
-            raise Exception('socket broken');
+            raise Exception('socket broken')
 
         self._sid = data
 
