@@ -7,6 +7,7 @@ class Player():
         self._position = [0,0,0]
         self._health = 100
         self._gold = 0
+        self._equippedItem = None
         self._items = []
         self._resources = []
 
@@ -35,6 +36,15 @@ class Player():
 
 
     @property
+    def equipped_weapon(self):
+        return self._equipped_weapon
+
+    @equipped_weapon.setter
+    def equipped_weapon(self, value):
+        self._equipped_weapon = value
+
+
+    @property
     def gold(self):
         return self._gold
 
@@ -59,5 +69,19 @@ class Player():
     @resources.setter
     def resources(self, value):
         self._resources = value
+
+
+    def attack(self, other):
+        damage = self.equipped_weapon.damage
+        other.health -= damage
+
+
+    def use_potion(self, potion_name):
+        potions = [potion for potion in self.potions if potion.name == potion_name]
+
+        if len(potions) > 0:
+            potion = potions[0]
+            self.potions.remove(potion)
+            self.health += self.potions.heal
 
 

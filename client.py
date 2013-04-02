@@ -7,44 +7,56 @@ class Client():
     def __init__(self):
         self._sock = socket.socket()
         self._sock.connect((constants.HOST, constants.PORT))
+        self._sid = None
         print 'client connected to server'
 
 
     def login(self, username, pass_hash):
-        self._sock.sendall('login, %s, %s' % (username, pass_hash))
+        self._sock.sendall('login; %s; %s' % (username, pass_hash))
+
+        data = self._sock.recv(4096)
+        if data == '':
+            raise Exception('socket broken');
+
+        self._sid = data
+
+    def __check_sid(self):
+        if self._sid == None:
+            raise Exception('cannot send message. login first')
 
 
-    def logout(self, sID):
-        self._sock.sendall('logout, %s' % sID)
+    def logout(self):
+        self.__check_sid()
+
+        self._sock.sendall('logout; %s' % self._sid)
 
 
-    def move(self, sID, relative_pos):
-        print '**rp ', relative_pos
-        pos_str = relative_pos.replace(',',';')
-        print '**posstr', pos_str
-        self._sock.sendall('move, %s, %s' % (sID, pos_str))
+    def move(self, relative_pos):
+        self.__check_sid()
+
+        self._sock.sendall('move; %s; %s' % (self._sid, relative_pos))
 
 
-    def equip(self, sID, item):
-        self._sock.sendall('equip, %s, %s' % (sID, item))
+    def equip(self, item):
+        self.__check_sid()
+
+        self._sock.sendall('equip; %s; %s' % (self._sid, item))
 
 
-    def attack(self, sID, target):
-        self._sock.sendall('attack, %s, %s' % (sID, target))
+    def attack(self, target):
+        self.__check_sid()
+
+        self._sock.sendall('attack; %s; %s' % (self._sid, target))
 
 
-    def gather(self, sID, resource):
-        self._sock.sendall('gather, %s, %s' % (sID, resource))
+    def use_potion(self, potion_name):
+        self.__check_sid()
+
+        self._sock.sendall('use_potion; %s; %s' % (self._sid, potion_name))
 
 
-    def buy(self, sID, item):
-        self._sock.sendall('buy, %s, %s' % (sID, item))
+    def get_visible_map_positions(self):
+        self.__check_sid()
 
-
-    def sell(self, sID, item):
-        self._sock.sendall('sell, %s, %s' % (sID, item))
-
-
-    def get_visible_player_positions(self, sID):
-        self._sock.sendall('get_visible_player_positions, %s' % sID)
+        self._sock.sendall('get_visible_map_positions; %s' % self._sid)
 

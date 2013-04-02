@@ -20,7 +20,7 @@ def get_command_list():
     for attr_name in dir(client):
         attr = getattr(client, attr_name)
 
-        if callable(attr) and not attr_name.startswith('__'):
+        if callable(attr) and not '__' in attr_name:
 
             args = [arg for arg in inspect.getargspec(attr)[0] if not arg == 'self']
             client_commands.append("%s %s" % (attr_name, ' '.join(args)))
@@ -43,8 +43,6 @@ def handle_command(command):
     split_command = command.split(' ')
     command_name = split_command[0].strip()
 
-    print split_command
-
     if len(split_command) > 1:
         args = split_command[1:]
     else:
@@ -54,7 +52,11 @@ def handle_command(command):
         return None
 
     method = getattr(client, command_name)
-    return method(*args)
+
+    try:
+        return method(*args)
+    except Exception as e:
+        print "client-side error: ", e
 
 
 while True:
