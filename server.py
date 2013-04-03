@@ -3,6 +3,7 @@ import ssl
 import threading
 import select
 import random
+import os
 
 import constants
 from player import Player
@@ -108,6 +109,7 @@ class Server(threading.Thread):
             sid_to_player_map[sid] = Player(sid)
 
         self._update_game_map()
+        self.print_map()
 
         return sid
 
@@ -162,6 +164,8 @@ class Server(threading.Thread):
 
             # not weapon/potion, must be other player
             pass
+
+        self.print_map(self)
 
 
     def handle_equip(self, sid, weapon):
@@ -226,11 +230,11 @@ class Server(threading.Thread):
                 # if there's a new connection coming in (self._sock state changed)
                 if sock is self._sock:
                     connected_socket, client_address = self._sock.accept() # blocks waiting for connection
-                    connected_socket = ssl.wrap_socket(connected_socket,
-                                                       server_side=True,
-                                                       certfile='cert.pem',
-                                                       keyfile='cert.pem',
-                                                       ssl_version=ssl.PROTOCOL_TLSv1)
+                   # connected_socket = ssl.wrap_socket(connected_socket,
+                    #                                   server_side=True,
+                     #                                  certfile='cert.pem',
+                      #                                 keyfile='cert.pem',
+                       #                                ssl_version=ssl.PROTOCOL_TLSv1)
 
                     print 'server: got connection from ', client_address
 
@@ -263,5 +267,12 @@ class Server(threading.Thread):
         print 'server: joining server thread'
         self.join()
         print 'server: server thread joined'
+
+    def print_map(self):
+        os.system('clear')
+        print '\n'.join([str(row) for row in game_map])
+            
+        
+        
 
 
