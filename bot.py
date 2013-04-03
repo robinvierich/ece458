@@ -1,4 +1,8 @@
 from client import Client
+from server import Server
+
+dummy_server = Server()
+dummy_server.start()
 
 client = Client()
 
@@ -9,7 +13,7 @@ pass_hash = 'admin'
 sid = client.login(username, pass_hash)
 
 def get_player_position():
-    game_map = client.get_visible_map()
+    game_map = client.show_map()
 
     for i, row in enumerate(game_map):
         for j, col in enumerate(row):
@@ -17,24 +21,27 @@ def get_player_position():
                 return [j, i] # j is x-pos, i is y-pos
 
 
-def collect_all_items():
-    x, y = get_player_position()
+def print_map(game_map):
+    print '\n'
+    print '\n'.join([str(row) for row in game_map])
+    print '\n'
 
-    game_map = client.get_visible_map()
+
+def collect_all_items():
+
+    game_map = client.show_map()
 
     relative_moves = []
 
     for i, row in enumerate(game_map):
         for j, col in enumerate(row):
-
             if col != ' ' and col != 'x':
-                relative_moves.append([i - x, j - x])
+                x, y = get_player_position()
+                move_vect = [j - x, i - y]
+                client.move(move_vect)
+                game_map = client.show_map()
+                print_map(game_map)
 
-    for vect in relative_moves:
-        client.move(vect)
-
-def print_map(game_map):
-    '\n'.join([str(row) for row in game_map])
 
 def attack_players():
     pass
@@ -45,4 +52,15 @@ def play_game():
     attack_players()
 
 
+collect_all_items()
+
+print 'BOT: collect all items done'
+
+player_str = client.show_player()
+
+print 'BOT: player ', player_str
+
+print 'BOT: DONE'
+dummy_server.stop()
+quit()
 
