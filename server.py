@@ -31,11 +31,11 @@ weapons = {
 
 
 game_map = [
-        [' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' '],
-        [' ', ' ', ' ', ' ', ' '],
+        [' ',     ' ',      'club', ' ',     ' '     ],
+        [' ',     ' ',      ' ',    ' ',     'weak'  ],
+        [' ',     ' ',      ' ',    ' ',     ' '     ],
+        ['staff', ' ',      ' ',    'sword', ' '     ],
+        [' ',     'medium', ' ',    ' ',     'strong'],
 ]
 
 
@@ -230,11 +230,11 @@ class Server(threading.Thread):
                 # if there's a new connection coming in (self._sock state changed)
                 if sock is self._sock:
                     connected_socket, client_address = self._sock.accept() # blocks waiting for connection
-                   # connected_socket = ssl.wrap_socket(connected_socket,
-                    #                                   server_side=True,
-                     #                                  certfile='cert.pem',
-                      #                                 keyfile='cert.pem',
-                       #                                ssl_version=ssl.PROTOCOL_TLSv1)
+                    connected_socket = ssl.wrap_socket(connected_socket,
+                                                       server_side=True,
+                                                       certfile='cert.pem',
+                                                       keyfile='cert.pem',
+                                                       ssl_version=ssl.PROTOCOL_TLSv1)
 
                     print 'server: got connection from ', client_address
 
