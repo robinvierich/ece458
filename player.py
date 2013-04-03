@@ -4,7 +4,7 @@ class Player():
 
     def __init__(self, sid):
         self._sid = sid
-        self._position = [0,0,0]
+        self._pos = [0,0]
         self._health = 100
         self._gold = 0
         self._equippedItem = None

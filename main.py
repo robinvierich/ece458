@@ -66,5 +66,8 @@ while True:
 
     ret_val = handle_command(raw_input())
 
+    if isinstance(ret_val, list):
+        ret_val = '\n'.join([str(val) for val in ret_val])
+
     print ret_val
 

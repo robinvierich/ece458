@@ -66,6 +66,6 @@ class Client():
         if data == '':
             raise Exception('socket broken')
 
-        visible_map = '\n'.join([str(row) for row in eval(data)])
-
+        #visible_map = '\n'.join([str(row) for row in eval(data)])
+        visible_map = eval(data)
         return visible_map

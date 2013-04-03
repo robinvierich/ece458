@@ -56,6 +56,11 @@ class Server(threading.Thread):
 
         print 'server: server thread created'
 
+    def _update_game_map(self):
+        for player in sid_to_player_map.values():
+            x, y = player.pos
+            game_map[y][x] = 'x'
+
     def _handle_request(self, socket, data):
         print 'server: in _handle_request'
 
@@ -97,38 +102,50 @@ class Server(threading.Thread):
         print 'server: in handle login. %s, %s, %s' % (socket, username, pass_hash)
         stored_pass_hash = users.get(username)
 
-        sid = str(round(random.random(), 10))
+        sid = float(round(random.random(), 10))
 
         if pass_hash == stored_pass_hash:
             sid_to_player_map[sid] = Player(sid)
+
+        self._update_game_map()
 
         return sid
 
 
     def handle_logout(self, sid):
+        sid = float(sid)
         print 'server: in handle logout. %s'% sid
         if sid in sid_to_player_map:
             del sid_to_player_map[sid]
 
 
     def handle_move(self, sid, relative_pos_str):
+        sid = float(sid)
         print 'server: in handle move. %s, %s'% (sid, str(relative_pos_str))
         player = sid_to_player_map.get(sid)
+        print 'server: player_map', sid_to_player_map
+
         if player == None:
+            print 'server: PLAYER WAS NONE'
             return
 
         relative_pos = eval(relative_pos_str)
+
+        x, y, = player.pos
+        game_map[x][y] = ' '
 
         player.pos[0] += relative_pos[0]
         player.pos[1] += relative_pos[1]
 
         # make sure player isn't outside bounds
-        player.pos[0] = min(max(player.pos[0], xmin), xmax)
-        player.pos[1] = min(max(player.pos[1], ymin), ymax)
+        player.pos[0] = min(max(player.pos[0], 0), xmax)
+        player.pos[1] = min(max(player.pos[1], 0), ymax)
 
         x, y = player.pos
 
         game_cell = game_map[x][y]
+
+        self._update_game_map()
 
         if not game_cell == ' ':
             # try add weapon
@@ -148,6 +165,7 @@ class Server(threading.Thread):
 
 
     def handle_equip(self, sid, weapon):
+        sid = float(sid)
         print 'server: in handle equip. %s, %s'% (sid, weapon)
         player = sid_to_player_map.get(sid)
         if player == None:
@@ -156,6 +174,7 @@ class Server(threading.Thread):
 
 
     def handle_attack(self, sid, target_id):
+        sid = float(sid)
         print 'server: in handle attack. %s, %s'% (sid, target_id)
         player = sid_to_player_map.get(sid)
         if player == None:
@@ -166,6 +185,7 @@ class Server(threading.Thread):
 
 
     def handle_use_potion(self, sid, potion_name):
+        sid = float(sid)
         print 'server: in handle_use_potion. %s, %s'%  (sid, potion_name)
         player = sid_to_player_map.get(sid)
         if player == None:
@@ -175,6 +195,7 @@ class Server(threading.Thread):
 
 
     def handle_get_visible_map(self, sid):
+        sid = float(sid)
         print 'server: in handle_get_visible_map. %s'% (sid)
 
         player = sid_to_player_map.get(sid)
