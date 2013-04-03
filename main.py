@@ -1,5 +1,6 @@
 import inspect
 import time
+import os
 
 from server import Server
 from client import Client
@@ -59,9 +60,10 @@ def handle_command(command):
         print "client-side error: ", e
 
 
+os.system('clear')
 while True:
     time.sleep(0.1)
-    print 'Enter "help" for list of commands'
+    print '\nEnter "help" for list of commands'
     print 'Enter command: '
 
     ret_val = handle_command(raw_input())

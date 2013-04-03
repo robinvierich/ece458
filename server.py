@@ -120,6 +120,11 @@ class Server(threading.Thread):
         if sid in sid_to_player_map:
             del sid_to_player_map[sid]
 
+    def handle_show_player(self, sid):
+        sid = float(sid)
+        player = sid_to_player_map.get(sid)
+        return str(player)
+
 
     def handle_move(self, sid, relative_pos_str):
         sid = float(sid)
@@ -133,8 +138,8 @@ class Server(threading.Thread):
 
         relative_pos = eval(relative_pos_str)
 
-        x, y, = player.pos
-        game_map[x][y] = ' '
+        x, y = player.pos
+        game_map[y][x] = ' '
 
         player.pos[0] += relative_pos[0]
         player.pos[1] += relative_pos[1]
@@ -145,7 +150,7 @@ class Server(threading.Thread):
 
         x, y = player.pos
 
-        game_cell = game_map[x][y]
+        game_cell = game_map[y][x]
 
         self._update_game_map()
 
@@ -165,7 +170,7 @@ class Server(threading.Thread):
             # not weapon/potion, must be other player
             pass
 
-        self.print_map(self)
+        self.print_map()
 
 
     def handle_equip(self, sid, weapon):
@@ -175,6 +180,8 @@ class Server(threading.Thread):
         if player == None:
             return
         player.equipped_weapon = weapon
+
+        print str(player)
 
 
     def handle_attack(self, sid, target_id):
@@ -187,6 +194,8 @@ class Server(threading.Thread):
         target = sid_to_player_map[target_id]
         player.attack(target)
 
+        print str(player)
+
 
     def handle_use_potion(self, sid, potion_name):
         sid = float(sid)
@@ -197,10 +206,12 @@ class Server(threading.Thread):
 
         player.use_potion(potion_name)
 
+        print str(player)
 
-    def handle_get_visible_map(self, sid):
+
+    def handle_show_map(self, sid):
         sid = float(sid)
-        print 'server: in handle_get_visible_map. %s'% (sid)
+        print 'server: in handle_show_map. %s'% (sid)
 
         player = sid_to_player_map.get(sid)
         if player == None:
@@ -269,10 +280,7 @@ class Server(threading.Thread):
         print 'server: server thread joined'
 
     def print_map(self):
-        os.system('clear')
+        #os.system('clear')
         print '\n'.join([str(row) for row in game_map])
-            
-        
-        
 
 

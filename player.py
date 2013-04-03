@@ -6,11 +6,21 @@ class Player():
         self._sid = sid
         self._pos = [0,0]
         self._health = 100
-        self._gold = 0
-        self._equippedItem = None
-        self._items = []
-        self._resources = []
+        self._equipped_weapon = None
+        self._weapons = []
+        self._potions = []
 
+    def __str__(self):
+        return """
+        Player State:
+        sid = %s
+        pos = %s
+        health = %s
+        equipped = %s
+        weapons = %s
+        potions = %s
+        """% (self.sid, self.pos, self.health, 
+                self.equipped_weapon, self.weapons, self.potions)
 
     @property
     def sid(self):
@@ -45,30 +55,21 @@ class Player():
 
 
     @property
-    def gold(self):
-        return self._gold
+    def weapons(self):
+        return self._weapons
 
-    @gold.setter
-    def gold(self, value):
-        self._gold = value
-
-
-    @property
-    def items(self):
-        return self._items
-
-    @items.setter
-    def items(self, value):
-        self._items = value
+    @weapons.setter
+    def weapons(self, value):
+        self._weapons = value
 
 
     @property
-    def resources(self):
-        return self._resources
+    def potions(self):
+        return self._potions
 
-    @resources.setter
-    def resources(self, value):
-        self._resources = value
+    @potions.setter
+    def potions(self, value):
+        self._potions = value
 
 
     def attack(self, other):
@@ -83,5 +84,6 @@ class Player():
             potion = potions[0]
             self.potions.remove(potion)
             self.health += self.potions.heal
+
 
 

@@ -26,6 +26,17 @@ class Client():
         if self._sid == None:
             raise Exception('cannot send message. login first')
 
+    def show_player(self):
+        self.__check_sid()
+
+        self._sock.sendall('show_player;%s' % self._sid)
+
+        data = self._sock.recv(4096)
+        if data == '':
+            raise Exception('socket broken')
+
+        return data
+
 
     def logout(self):
         self.__check_sid()
@@ -57,10 +68,10 @@ class Client():
         self._sock.sendall('use_potion; %s; %s' % (self._sid, potion_name))
 
 
-    def get_visible_map(self):
+    def show_map(self):
         self.__check_sid()
 
-        self._sock.sendall('get_visible_map; %s' % self._sid)
+        self._sock.sendall('show_map; %s' % self._sid)
 
         data = self._sock.recv(4096)
         if data == '':
