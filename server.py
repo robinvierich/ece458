@@ -10,7 +10,20 @@ from player import Player
 from models import Potion, Weapon
 
 #{ session id : player }
-sid_to_player_map = {}
+
+def get_sid():
+    sid = 0
+    while True:
+        sid += 1
+        yield sid
+
+sid_generator = get_sid()
+
+enemy_sid = sid_generator.next()
+
+sid_to_player_map = {
+    enemy_sid : Player(enemy_sid)
+}
 
 users = {
     'admin': 'admin',
@@ -26,7 +39,7 @@ potions = {
 weapons = { 
     'club' : Weapon('club', price=10, damage=10),
     'sword': Weapon('sword', 20, 25),
-    'staff': Weapon('staff', 30, 40),
+    'staff': Weapon('staff', 30, 100),
 }
 
 
@@ -37,6 +50,7 @@ game_map = [
         ['staff', ' ',      ' ',    'sword', ' '     ],
         [' ',     'medium', ' ',    ' ',     'strong'],
 ]
+
 
 
 xmax = len(game_map) - 1
@@ -55,12 +69,18 @@ class Server(threading.Thread):
         self._sock.listen(1)
         self._sock.setblocking(0.0)
 
+
         print 'server: server thread created'
+
 
     def _update_game_map(self):
         for player in sid_to_player_map.values():
             x, y = player.pos
-            game_map[y][x] = 'x'
+
+            if player.health > 0:
+                game_map[y][x] = '%d' % player.sid
+            else:
+                game_map[y][x] = '%d[dead]' % player.sid
 
     def _handle_request(self, socket, data):
         print 'server: in _handle_request'
@@ -103,7 +123,7 @@ class Server(threading.Thread):
         print 'server: in handle login. %s, %s, %s' % (socket, username, pass_hash)
         stored_pass_hash = users.get(username)
 
-        sid = float(round(random.random(), 10))
+        sid = sid_generator.next()
 
         if pass_hash == stored_pass_hash:
             sid_to_player_map[sid] = Player(sid)
@@ -115,19 +135,26 @@ class Server(threading.Thread):
 
 
     def handle_logout(self, sid):
-        sid = float(sid)
+        sid = int(sid)
         print 'server: in handle logout. %s'% sid
         if sid in sid_to_player_map:
             del sid_to_player_map[sid]
 
     def handle_show_player(self, sid):
-        sid = float(sid)
+        sid = int(sid)
         player = sid_to_player_map.get(sid)
         return str(player)
 
+    def handle_get_all_players(self, sid):
+        sid = int(sid)
+        if not sid in sid_to_player_map:
+            return None
+
+        return [str(player) for player in sid_to_player_map.values]
+
 
     def handle_move(self, sid, relative_pos_str):
-        sid = float(sid)
+        sid = int(sid)
         print 'server: in handle move. %s, %s'% (sid, str(relative_pos_str))
         player = sid_to_player_map.get(sid)
         print 'server: player_map', sid_to_player_map
@@ -173,32 +200,41 @@ class Server(threading.Thread):
         self.print_map()
 
 
-    def handle_equip(self, sid, weapon):
-        sid = float(sid)
-        print 'server: in handle equip. %s, %s'% (sid, weapon)
+    def handle_equip(self, sid, weapon_name):
+        sid = int(sid)
+        weapon_name = weapon_name.strip()
+        print 'server: in handle equip. %s, %s'% (sid, weapon_name)
+
         player = sid_to_player_map.get(sid)
         if player == None:
             return
-        player.equipped_weapon = weapon
+
+        player.try_equip(weapon_name)
 
         print str(player)
 
 
     def handle_attack(self, sid, target_id):
-        sid = float(sid)
         print 'server: in handle attack. %s, %s'% (sid, target_id)
+
+        sid = int(sid)
+        target_id = int(target_id)
+
         player = sid_to_player_map.get(sid)
         if player == None:
             return
 
-        target = sid_to_player_map[target_id]
-        player.attack(target)
+        target = sid_to_player_map.get(target_id)
+        if target:
+            player.attack(target)
+
+        self._update_game_map()
 
         print str(player)
 
 
     def handle_use_potion(self, sid, potion_name):
-        sid = float(sid)
+        sid = int(sid)
         print 'server: in handle_use_potion. %s, %s'%  (sid, potion_name)
         player = sid_to_player_map.get(sid)
         if player == None:
@@ -210,7 +246,7 @@ class Server(threading.Thread):
 
 
     def handle_show_map(self, sid):
-        sid = float(sid)
+        sid = int(sid)
         print 'server: in handle_show_map. %s'% (sid)
 
         player = sid_to_player_map.get(sid)

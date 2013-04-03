@@ -20,7 +20,7 @@ class Client():
         if data == '':
             raise Exception('socket broken')
 
-        self._sid = data
+        self._sid = int(data)
 
     def __check_sid(self):
         if self._sid == None:
@@ -36,6 +36,19 @@ class Client():
             raise Exception('socket broken')
 
         return data
+
+    def get_all_players(self):
+        self.__check_sid()
+
+        self._sock.sendall('get_all_players;%s' % self._sid)
+
+        data = self._sock.recv(4096)
+        if data == '':
+            raise Exception('socket broken')
+
+        return data
+
+
 
 
     def logout(self):

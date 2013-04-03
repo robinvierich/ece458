@@ -17,7 +17,7 @@ def get_player_position():
 
     for i, row in enumerate(game_map):
         for j, col in enumerate(row):
-            if game_map[i][j] == 'x':
+            if game_map[i][j] == str(client._sid):
                 return [j, i] # j is x-pos, i is y-pos
 
 
@@ -28,10 +28,7 @@ def print_map(game_map):
 
 
 def collect_all_items():
-
     game_map = client.show_map()
-
-    relative_moves = []
 
     for i, row in enumerate(game_map):
         for j, col in enumerate(row):
@@ -44,7 +41,28 @@ def collect_all_items():
 
 
 def attack_players():
-    pass
+    # TODO hardcoded this for now, need to search through
+    # players's items and find the one with biggest damage
+    client.equip('staff')
+
+    game_map = client.show_map()
+
+    for i, row in enumerate(game_map):
+        for j, col in enumerate(row):
+
+            try:
+                enemy_id = int(col)
+            except ValueError: # if cast fails
+                continue
+
+            if enemy_id == client._sid:
+                continue
+
+            client.attack(enemy_id)
+
+            game_map = client.show_map()
+            print_map(game_map)
+
 
 
 def play_game():
@@ -59,6 +77,8 @@ print 'BOT: collect all items done'
 player_str = client.show_player()
 
 print 'BOT: player ', player_str
+
+attack_players()
 
 print 'BOT: DONE'
 dummy_server.stop()

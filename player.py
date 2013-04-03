@@ -2,10 +2,10 @@ import constants
 
 class Player():
 
-    def __init__(self, sid):
+    def __init__(self, sid, health=100):
         self._sid = sid
-        self._pos = [0,0]
-        self._health = 100
+        self._pos = [0, 0]
+        self._health = health
         self._equipped_weapon = None
         self._weapons = []
         self._potions = []
@@ -49,10 +49,11 @@ class Player():
     def equipped_weapon(self):
         return self._equipped_weapon
 
-    @equipped_weapon.setter
-    def equipped_weapon(self, value):
-        self._equipped_weapon = value
-
+    def try_equip(self, weapon_name):
+        for weapon in self.weapons:
+            if weapon.name == weapon_name:
+                self._equipped_weapon = weapon
+                return weapon
 
     @property
     def weapons(self):
