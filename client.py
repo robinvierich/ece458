@@ -62,6 +62,18 @@ class Client():
 
         self._sock.sendall('move; %s; %s' % (self._sid, relative_pos))
 
+        data = self._sock.recv(4096)
+        if data == '':
+            raise Exception('socket broken')
+
+        #visible_map = '\n'.join([str(row) for row in eval(data)])
+        try:
+            visible_map = eval(data)
+        except SyntaxError:
+            visible_map = str(data)
+
+        return visible_map
+
 
     def equip(self, item):
         self.__check_sid()

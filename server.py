@@ -212,7 +212,7 @@ class Server(threading.Thread):
         try:
             relative_pos = eval(relative_pos_str)
         except:
-            return
+            return game_map
 
         x, y = player.pos
         game_map[y][x] = ' '
@@ -235,18 +235,18 @@ class Server(threading.Thread):
             weapon = weapons.get(game_cell)
             if weapon:
                 player.weapons.append(weapon)
-                return
+                return game_map
 
             # try add potion
             potion = potions.get(game_cell)
             if potion:
                 player.potions.append(potion)
-                return
+                return game_map
 
             # not weapon/potion, must be other player
             pass
-
-        self.print_map()
+        
+        return game_map
 
 
     def handle_equip(self, sid, weapon_name):
