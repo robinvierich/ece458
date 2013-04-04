@@ -2,10 +2,12 @@ import socket
 import ssl
 import threading
 import select
+
 import random
 import os
-
 import time
+
+import math
 
 import constants
 from player import Player
@@ -20,6 +22,10 @@ def get_sid():
         yield sid
 
 time.clock()
+
+def nCr(n,r):
+    f = math.factorial
+    return f(n) / f(r) / f(n-r)
 
 sid_generator = get_sid()
 
@@ -62,10 +68,37 @@ game_map = [
 xmax = len(game_map) - 1
 ymax = len(game_map[0]) - 1
 
+
+def levenshtein(a,b):
+    """Calculates the Levenshtein distance between a and b.
+    From http://hetland.org/coding/python/levenshtein.py 
+    """
+    n, m = len(a), len(b)
+    if n > m:
+    # Make sure n <= m, to use O(min(n,m)) space
+        a,b = b,a
+        n,m = m,n
+
+    current = range(n+1)
+    for i in range(1,m+1):
+        previous, current = current, [i]+[0]*n
+        for j in range(1,n+1):
+            add, delete = previous[j]+1, current[j-1]+1
+            change = previous[j-1]
+            if a[j-1] != b[i-1]:
+                change = change + 1
+            current[j] = min(add, delete, change)
+
+    return current[n]
+
+
 class Server(threading.Thread):
     def __init__(self, host=constants.SERVER_HOST, port=constants.SERVER_PORT):
         threading.Thread.__init__(self)
         self._running = False
+
+        self._action_sequences = {}
+        self._similarity_scores = {}
  
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -88,12 +121,20 @@ class Server(threading.Thread):
             else:
                 game_map[y][x] = '%d[dead]' % player.sid
 
+    def _get_method_name(self, data):
+
+        split_data = data.split(";");
+
+        method_name = split_data[0].strip()
+        return method_name
+
+
     def _handle_request(self, socket, data):
         print 'server: in _handle_request'
 
         split_data = data.split(";");
 
-        method_name = "handle_%s" % split_data[0].strip()
+        method_name = "handle_%s" % self._get_method_name(data)
 
         if not hasattr(self, method_name):
             print "server: ERROR! got bad method_name: ", method_name
@@ -168,7 +209,10 @@ class Server(threading.Thread):
         if player == None:
             return 'invalid session id'
 
-        relative_pos = eval(relative_pos_str)
+        try:
+            relative_pos = eval(relative_pos_str)
+        except:
+            return
 
         x, y = player.pos
         game_map[y][x] = ' '
@@ -285,14 +329,108 @@ class Server(threading.Thread):
 
         return True
 
-    def detect_bots(self, sock):
+    def _get_action_char(self, method_name):
+        # -- exclude login/logout
+        if method_name == 'login':
+            char = None
+        elif method_name == 'logout':
+            char = None
+        elif method_name == 'equip':
+            char = '3'
+        elif method_name == 'attack':
+            char = '4'
+        elif method_name == 'show_map':
+            char = '5'
+        elif method_name == 'show_player':
+            char = '6'
 
-        request_interval_valid = self.check_request_interval(sock)
+        elif method_name == 'move':
+            char = '7'
 
-        if request_interval_valid:
-            return False
-        else:
+        elif method_name == 'use_potion':
+            char = '8'
+
+        return char
+
+    def calc_similarity(self, sequences, k=constants.SEQUENCES_FOR_CHECK):
+        '''
+        sequences: a set of sequences
+        k: number of sequences to use
+        '''
+
+        sequences = sequences[0:k]
+
+        avg_dist = 0.0
+
+        num_distances_in_avg = nCr(k, 2)
+
+        for i in range(k):
+            for j in range(i+1, k):
+
+                seq1 = sequences[i]
+                seq2 = sequences[j]
+
+                dist = levenshtein(seq1, seq2)
+
+                avg_dist += dist / num_distances_in_avg
+
+        return avg_dist
+
+
+    def check_levenshtein(self, sock, data):
+
+        action_sequences = self._action_sequences.setdefault(sock, [[]])
+
+        method_name = self._get_method_name(data)
+        char = self._get_action_char(method_name)
+        
+        if char == None:
             return True
+
+        action_sequences[0].append(char)
+
+        if len(action_sequences[0]) == constants.ACTIONS_PER_SEQUENCE:
+            if len(action_sequences) == constants.SEQUENCES_FOR_CHECK:
+
+                similarity_scores = self._similarity_scores.setdefault(sock,[])
+
+                similarity = self.calc_similarity(action_sequences)
+                self._action_sequences[sock] = [[]]
+
+                print '###################server: sequences  ', action_sequences
+                print '###################server: similarity ', similarity
+
+                similarity_scores.append(similarity)
+
+                avg_similarity = sum(similarity_scores)/len(similarity_scores)
+
+                if avg_similarity < constants.MIN_AVG_SIMILARITY:
+                    return False
+            else:
+                action_sequences.insert(0, [])
+
+        return True
+
+
+    def detect_bots(self, sock, data):
+        'returns True if bots are found'
+
+        ok = True
+
+        if constants.CHECK_LEVENSHTEIN:
+
+            ok = ok and self.check_levenshtein(sock, data)
+            if not ok:
+                print 'server: BOT DETECTED - Levenshtein'
+
+        if constants.CHECK_REQUEST_INTERVAL:
+
+            ok = ok and self.check_request_interval(sock)
+            if not ok:
+                print 'server: BOT DETECTED - Request Interval'
+
+        return not ok
+
 
     def run(self):
         print 'server: server thread started'
@@ -329,10 +467,9 @@ class Server(threading.Thread):
             #        try:
                     data = sock.recv(constants.BUFFER_SIZE)
 
-                    bot_detected = self.detect_bots(sock)
+                    bot_detected = self.detect_bots(sock, data)
 
                     if bot_detected:
-                        print 'server: BOT DETECTED! Ignoring request.'
                         return
 
                     if data:
