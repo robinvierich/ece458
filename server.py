@@ -5,6 +5,8 @@ import select
 import random
 import os
 
+import time
+
 import constants
 from player import Player
 from models import Potion, Weapon
@@ -17,6 +19,8 @@ def get_sid():
         sid += 1
         yield sid
 
+time.clock()
+
 sid_generator = get_sid()
 
 enemy_sid = sid_generator.next()
@@ -24,6 +28,8 @@ enemy_sid = sid_generator.next()
 sid_to_player_map = {
     enemy_sid : Player(enemy_sid)
 }
+
+sock_to_request_time = {}
 
 users = {
     'admin': 'admin',
@@ -148,7 +154,7 @@ class Server(threading.Thread):
     def handle_get_all_players(self, sid):
         sid = int(sid)
         if not sid in sid_to_player_map:
-            return None
+            return 'invalid session id'
 
         return [str(player) for player in sid_to_player_map.values]
 
@@ -160,8 +166,7 @@ class Server(threading.Thread):
         print 'server: player_map', sid_to_player_map
 
         if player == None:
-            print 'server: PLAYER WAS NONE'
-            return
+            return 'invalid session id'
 
         relative_pos = eval(relative_pos_str)
 
@@ -207,7 +212,7 @@ class Server(threading.Thread):
 
         player = sid_to_player_map.get(sid)
         if player == None:
-            return
+            return 'invalid session id'
 
         player.try_equip(weapon_name)
 
@@ -222,7 +227,7 @@ class Server(threading.Thread):
 
         player = sid_to_player_map.get(sid)
         if player == None:
-            return
+            return 'invalid session id'
 
         target = sid_to_player_map.get(target_id)
         if target:
@@ -238,7 +243,7 @@ class Server(threading.Thread):
         print 'server: in handle_use_potion. %s, %s'%  (sid, potion_name)
         player = sid_to_player_map.get(sid)
         if player == None:
-            return
+            return 'invalid session id'
 
         player.use_potion(potion_name)
 
@@ -251,12 +256,43 @@ class Server(threading.Thread):
 
         player = sid_to_player_map.get(sid)
         if player == None:
-            return
+            return 'invalid session id'
 
         #TODO: make this work
 
         return game_map
 
+    def check_request_interval(self, sock):
+
+        if not constants.CHECK_REQUEST_INTERVAL:
+            return False
+
+        prev_time = sock_to_request_time.setdefault(sock, 0)
+        cur_time = time.time()
+        delta_time = cur_time - prev_time
+
+        print 'prev_time: ', prev_time   
+        print 'cur_time: ', cur_time  
+        print 'delta_time: ', delta_time 
+
+        invalid_interval = prev_time != 0 and delta_time < constants.MIN_REQUEST_INTERVAL
+
+
+        if invalid_interval: 
+            return False
+
+        sock_to_request_time[sock] = cur_time
+
+        return True
+
+    def detect_bots(self, sock):
+
+        request_interval_valid = self.check_request_interval(sock)
+
+        if request_interval_valid:
+            return False
+        else:
+            return True
 
     def run(self):
         print 'server: server thread started'
@@ -292,7 +328,12 @@ class Server(threading.Thread):
                 else:
             #        try:
                     data = sock.recv(constants.BUFFER_SIZE)
-                    real_sid = sock.getpeername()
+
+                    bot_detected = self.detect_bots(sock)
+
+                    if bot_detected:
+                        print 'server: BOT DETECTED! Ignoring request.'
+                        return
 
                     if data:
                         print 'server: received data from ', client_address

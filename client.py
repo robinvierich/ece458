@@ -91,5 +91,9 @@ class Client():
             raise Exception('socket broken')
 
         #visible_map = '\n'.join([str(row) for row in eval(data)])
-        visible_map = eval(data)
+        try:
+            visible_map = eval(data)
+        except SyntaxError:
+            visible_map = str(data)
+
         return visible_map
