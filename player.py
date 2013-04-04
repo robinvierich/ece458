@@ -79,12 +79,14 @@ class Player():
 
 
     def use_potion(self, potion_name):
-        potions = [potion for potion in self.potions if potion.name == potion_name]
 
-        if len(potions) > 0:
-            potion = potions[0]
-            self.potions.remove(potion)
-            self.health += self.potions.heal
+        for potion in self.potions:
+            print 'potion: ', potion
+            if potion.name == potion_name:
+                self.health += potion.heal
+                self.potions.remove(potion)
+                break
+
 
 
 

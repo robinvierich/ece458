@@ -285,6 +285,9 @@ class Server(threading.Thread):
     def handle_use_potion(self, sid, potion_name):
         sid = int(sid)
         print 'server: in handle_use_potion. %s, %s'%  (sid, potion_name)
+
+        potion_name = potion_name.strip()
+
         player = sid_to_player_map.get(sid)
         if player == None:
             return 'invalid session id'
