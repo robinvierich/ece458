@@ -1,8 +1,8 @@
 from client import Client
 from server import Server
 
-dummy_server = Server()
-dummy_server.start()
+#dummy_server = Server()
+#dummy_server.start()
 
 client = Client()
 
@@ -81,6 +81,6 @@ print 'BOT: player ', player_str
 attack_players()
 
 print 'BOT: DONE'
-dummy_server.stop()
+#dummy_server.stop()
 quit()
 

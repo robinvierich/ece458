@@ -74,6 +74,9 @@ class Player():
 
 
     def attack(self, other):
+        if self.equipped_weapon == None:
+            return
+
         damage = self.equipped_weapon.damage
         other.health -= damage
 
